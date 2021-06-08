@@ -587,11 +587,16 @@ class Safe:
         :raises: CannotRetrieveSafeInfoException
         """
         try:
+            logging.warning("=== start get_contract")
             contract = self.get_contract()
+            logging.warning("=== start retrieve_master_copy_address")
             master_copy = self.retrieve_master_copy_address()
+            logging.warning("=== start retrieve_fallback_handler")
             fallback_handler = self.retrieve_fallback_handler()
+            logging.warning("=== start retrieve_guard")
             guard = self.retrieve_guard()
 
+            logging.warning("=== start ethereum call")
             results = self.ethereum_client.batch_call([
                 contract.functions.getModulesPaginated(SENTINEL_ADDRESS, 20),  # Does not exist in version < 1.1.1
                 contract.functions.nonce(),
@@ -600,6 +605,7 @@ class Safe:
                 contract.functions.VERSION(),
             ], from_address=self.address, block_identifier=block_identifier, raise_exception=False)
             modules_response, nonce, owners, threshold, version = results
+            logging.warning("=== ethereum call return")
             if modules_response:
                 modules, next_module = modules_response
             if not modules_response or next_module != SENTINEL_ADDRESS:  # < 1.1.1 or still more elements in the list
