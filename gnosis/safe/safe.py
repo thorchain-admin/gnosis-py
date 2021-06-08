@@ -546,10 +546,14 @@ class Safe:
         :raises: CannotRetrieveSafeInfoException
         """
         try:
+            logger.warning("=== start get_contract, %s", self.address)
             contract = self.get_contract()
+            logger.warning("=== start retrieve_master_copy_address, %s", self.address)
             master_copy = self.retrieve_master_copy_address()
+            logger.warning("=== start retrieve_fallback_handler, %s", self.address)
             fallback_handler = self.retrieve_fallback_handler()
 
+            logger.warning("=== start ethereum call, %s", self.address)
             results = self.ethereum_client.batch_call([
                 contract.functions.getModules(),  # Tuple of (addresses, next) from v1.1.1 and for old Safes just a list
                 contract.functions.nonce(),
@@ -558,8 +562,10 @@ class Safe:
                 contract.functions.VERSION(),
             ], from_address=self.address, block_identifier=block_identifier)
             modules, nonce, owners, threshold, version = results
+            logger.warning("=== ethereum call return, %s", self.address)
             if len(modules) == 10:  # Pagination is enabled and by default is 10
                 modules = self.retrieve_modules()
+            logger.warning("=== return, %s", self.address)
             return SafeInfo(self.address, fallback_handler, master_copy, modules, nonce, owners, threshold, version)
         except (ValueError, BadFunctionCallOutput) as e:
             raise CannotRetrieveSafeInfoException(self.address) from e
